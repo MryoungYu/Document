@@ -1,0 +1,77 @@
+From http://nislab.bu.edu/projects/security/compiling-ntl-for-android/
+
+
+# Compiling NTL for Android
+
+Student: Idan Warsawski (compilation of NTL), Karen Cui (compilation of GMP), Hongchang Wu (description of Android NDK)
+
+Advisors: Ari Trachtenberg, David Starobinski
+
+ 
+## Android NDK
+
+(the following was written by Hongchang Wu)
+
+The Android NDK is a toolset that lets you embed components that make use of native code in your Android applications
+
+The NDK includes a set of cross-toolchains (compilers, linkers, etc..) that can generate native ARM binaries on Linux, OS X, and Windows (with Cygwin) platforms.
+
+It provides a set of system headers for stable native APIs that are guaranteed to be supported in all later releases of the platform:
+
+ 
+
+- libc (C library) headers
+- libm (math library) headers
+-  JNI interface headers
+-  libz (Zlib compression) headers
+ - liblog (Android logging) header
+ - OpenGL ES 1.1 and OpenGL ES 2.0 (3D graphics libraries) headers
+- libjnigraphics (Pixel buffer access) header (for Android 2.2 and above).
+- A Minimal set of headers for C++ support
+
+For more information, refer to [http://developer.android.com/sdk/ndk/index.html](http://developer.android.com/sdk/ndk/index.html)
+
+ 
+## Compiling GMP
+
+If you want to use the GMP library for multiprecision arithmetic as part of the NTL package (this is not strictly needed):
+
+- Download GMP Library (http://gmplib.org/)
+- Download a cross-compiler (http://www.codesourcery.com/sgpp/lite/arm)
+- \>./configure –prefix=$HOME/android –host=arm-none-linux-gnueabi CC=arm-none-linux-gnueabi-gcc LD=arm-none-linux-gnueabi-ld AR=arm-none-linux-gnueabi-ar RANLIB=arm-none-linux-gnueabi-ranlib
+- \> make
+- \> make install
+- Now the GMP library is complied using the cross compiler
+- Write a program using GMP (e.g. add_example in this case). Please find the attachment for this file.
+- Compile the program using the cross compiler  
+    \> arm-none-linux-gnueabi-gcc -I /home/jcui928/Desktop/gmp-5.0.1 -static add_example.c -L /home/jcui928/lib -lgmp
+- Put the executable to /data/loca/src in the phone  
+    \> adb push a.out /data/local/src/a.out
+- Run the program on Droid (adb shell)  
+    \> adb shell
+- $ cd /data/local/src
+- $ ./a.out 3 5  
+    3 + 5 => 8
+- $ ./a.out 3000000000000000000 5000000000000000000000000000000000000  
+    3000000000000000000 + 5000000000000000000000000000000000000 =>   5000000000000000003000000000000000000
+
+– KarenCui – 28 Jun 2010
+
+You can use these command lines to compile GMP for use with NTL via the NDK compiler. I’ve only (mostly) tested the v7 line.
+
+##V7
+
+./configure --prefix=$HOME/android --disable-shared --host=arm-none-linux CC=arm-eabi-gcc LD=arm-eabi-ld AR=arm-eabi-ar RANLIB=arm-eabi-ranlib CFLAGS="-nostdlib -Bdynamic -Wl,-dynamic-linker,/system/bin/linker -Wl,--gc-sections -Wl,-z,nocopyreloc -I$NDK_DIR/build/platforms/android-8/arch-arm/usr/include -fpic -mthumb-interwork -ffunction-sections -funwind-tables -fstack-protector -fno-short-enums -fomit-frame-pointer -fstrict-aliasing -funswitch-loops -finline-limit=300 -Wl,-T,$NDK_DIR/build/prebuilt/linux-x86/arm-eabi-4.4.0/arm-eabi/lib/ldscripts/armelf.x -Wl,-rpath-link=$NDK_DIR/build/platforms/android-8/arch-arm/usr/lib -L$NDK_DIR/build/platforms/android-8/arch-arm/usr/lib -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ -Wno-psabi -Wa,--noexecstack -march=armv7-a -mfloat-abi=softfp -mfpu=vfp" LDFLAGS="$NDK_DIR/build/platforms/android-8/arch-arm/usr/lib/crtbegin_dynamic.o $NDK_DIR/build/prebuilt/linux-x86/arm-eabi-4.4.0/lib/gcc/arm-eabi/4.4.0/libgcc.a $NDK_DIR/build/platforms/android-8/arch-arm/usr/lib/crtend_android.o" LIBS="-lc -lm" CXXCPP="arm-eabi-g++ -E" CXX="arm-eabi-g++" LD="arm-eabi-ld" NM="arm-eabi-nm"
+
+##v5
+
+./configure --prefix=$HOME/android --host=arm-none-linux CC=arm-eabi-gcc LD=arm-eabi-ld AR=arm-eabi-ar RANLIB=arm-eabi-ranlib CFLAGS="-nostdlib -Bdynamic -Wl,-dynamic-linker,/system/bin/linker -Wl,--gc-sections -Wl,-z,nocopyreloc -I$NDK_DIR/build/platforms/android-8/arch-arm/usr/include -fpic -mthumb-interwork -ffunction-sections -funwind-tables -fstack-protector -fno-short-enums -fomit-frame-pointer -fstrict-aliasing -funswitch-loops -finline-limit=300 -Wl,-T,$NDK_DIR/build/prebuilt/linux-x86/arm-eabi-4.4.0/arm-eabi/lib/ldscripts/armelf.x -Wl,-rpath-link=$NDK_DIR/build/platforms/android-8/arch-arm/usr/lib -L$NDK_DIR/build/platforms/android-8/arch-arm/usr/lib -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ -Wno-psabi -Wa,--noexecstack -march=armv5te -mtune=xscale -msoft-float" LDFLAGS="$NDK_DIR/build/platforms/android-8/arch-arm/usr/lib/crtbegin_dynamic.o $NDK_DIR/build/prebuilt/linux-x86/arm-eabi-4.4.0/lib/gcc/arm-eabi/4.4.0/libgcc.a $NDK_DIR/build/platforms/android-8/arch-arm/usr/lib/crtend_android.o" LIBS="-lc -lm" CXXCPP="arm-eabi-g++ -E" CXX="arm-eabi-g++" LD="arm-eabi-ld" NM="arm-eabi-nm"
+
+(v7 and v5 represent the ARM compile targets)
+
+– IdanWarsawski – 23 Jul 2010
+
+ 
+Compiling NTL
+
+Please see the more detailed instructions and binaries [here](http://ipsit.bu.edu/twiki/bin/view/Nislab/CompileNTLInstructions).
